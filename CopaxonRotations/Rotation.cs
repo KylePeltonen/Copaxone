@@ -48,7 +48,7 @@ namespace CopaxonRotations
             double D1 = 0;
             for (int i = 0; i < next; i++)
             {
-                int adjacent = (i + Gap) % next;
+                int adjacent = (i - Gap + (int)size) % next;
                 D1 += sequence[adjacent].Distance(sequence[i]);
             }
 
@@ -61,7 +61,7 @@ namespace CopaxonRotations
             double D2 = Distance(2);
             double D3 = Distance(3);
 
-            return D1 + D2 * 0.75 + D3 * 0.5;
+            return D1 + D2 * 0.5 + D3 * 0.25;
         }
 
         public string CSVHeader()
