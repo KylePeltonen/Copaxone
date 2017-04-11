@@ -2,43 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CopaxonRotations
 {
     class Program
     {
-        static void Recurse(ref Area A, ref Rotation R, ref PriorityQueue<Rotation> P)
-        {
-            uint Free = A.FreeCells;
-
-            if (Free == 0)
-            {
-                P.Enqueue((Rotation)R.Clone());
-                //Console.WriteLine(R.ToCSV());
-                return;
-            }
-
-            uint After = 0;
-            if (Free == A.Cells)
-            {
-                R.Add(A.AcquireNextCell(ref After));
-                Recurse(ref A, ref R, ref P);
-            }
-            else
-            {
-                while (Free > 0)
-                {
-                    Cell c = A.AcquireNextCell(ref After);
-                    R.Add(c);
-                    Recurse(ref A, ref R, ref P);
-                    A.ReturnCell(c);
-                    R.Remove();
-                    Free--;
-                }
-            }
-        }
-
         static void Main(string[] args)
         {
 #if false
@@ -78,29 +48,26 @@ namespace CopaxonRotations
             Console.WriteLine("Press enter to continue...");
             Console.Read();
 #endif
-#if true
-            Area A = new Area(6, 2);
-            Rotation R = new Rotation(A);
-            PriorityQueue<Rotation> P = new PriorityQueue<Rotation>();
-            Console.WriteLine(R.CSVHeader());
-            Recurse(ref A, ref R, ref P);
+            RotationCalculator R = new RotationCalculator(3, 2);
+            Thread t = new Thread(new ThreadStart(R.ComputeOptions));
+            t.Start();
+            t.Join();
 
             // Only return the first three [unique] scores
             double currentScore = -1;
             int countScores = 0;
 
-            while (P.Count() > 0 && countScores < 4)
+            while (R.Options.Count() > 0 && countScores < 4)
             {
-                Rotation current = P.Dequeue();
-                if ( current.Score() != currentScore )
+                Rotation current = R.Options.Dequeue();
+                if (current.Score() != currentScore)
                 {
                     currentScore = current.Score();
                     countScores++;
                 }
-                    
-                Console.WriteLine(current.ToCSV()); 
+
+                Console.WriteLine(current.ToCSV());
             }
-#endif
         }
     }
 }
