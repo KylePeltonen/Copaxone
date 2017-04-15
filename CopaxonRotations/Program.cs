@@ -13,7 +13,7 @@ namespace CopaxonRotations
         {
             uint Rows, Columns;
 
-            if ( !uint.TryParse(args[0],out Rows) || !uint.TryParse(args[1],out Columns) )
+            if ( args.Length < 2 || !uint.TryParse(args[0],out Rows) || !uint.TryParse(args[1],out Columns) )
             {
                 Console.WriteLine("Usage: CopaxoneRotations <Rows> <Columns>");
                 return;
@@ -56,8 +56,6 @@ namespace CopaxonRotations
                 Rotation current = R[0].Options.Dequeue();
                 Console.WriteLine(current.ToCSV());
             }
-
-            Console.WriteLine("{0} possiblities. Press enter to continue...", total);
         }
     }
 }
