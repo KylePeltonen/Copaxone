@@ -11,63 +11,53 @@ namespace CopaxonRotations
     {
         static void Main(string[] args)
         {
-#if false
-            Area A = new Area(3, 2);
-            Cell Base = A.AcquireCell(1, 1);
-            Rotation R = new Rotation(A);
-            R.Add(Base);
+            uint Rows, Columns;
 
-            Console.WriteLine("Cell count = {0}", A.Cells);
-            uint After = 0;
-            while (A.FreeCells > 0)
+            if ( !uint.TryParse(args[0],out Rows) || !uint.TryParse(args[1],out Columns) )
             {
-                Cell c = A.AcquireNextCell(ref After);
-                R.Add(c);
-
-                Console.WriteLine("Cell {0}, Index = {1} -- Distance from (1,1) to {0} = {2}", c.ToString(), Base.Distance(c), A.Index(c));
+                Console.WriteLine("Usage: CopaxoneRotations <Rows> <Columns>");
+                return;
             }
 
-            Console.WriteLine("Returning some cells...");
-            A.ReturnCell(A.Cell(2, 2));
-            A.ReturnCell(A.Cell(2, 1));
+            int cCPU = Environment.ProcessorCount;
+            RotationCalculator[] R = new RotationCalculator[cCPU];
+            Thread[] T = new Thread[cCPU];
 
-            After = 0;
-            while (A.FreeCells > 0)
+            for ( int i = 0; i < cCPU; i++ )
             {
-                Cell c = A.AcquireNextCell(ref After);
-
-                Console.WriteLine("Cell {0} -- Distance from (1,1) to {0} = {1}", c.ToString(), Base.Distance(c));
+                R[i] = new RotationCalculator(Rows, Columns, (Rows*Columns > 6), (Rows * Columns > 6));
+                T[i] = new Thread(new ThreadStart(R[i].ComputeOptions));
             }
 
-            Console.WriteLine("Rotation...");
-            Rotation R2 = (Rotation)R.Clone();
-            R2.Remove();
-            Console.WriteLine(R.ToCSV());
-            Console.WriteLine(R2.ToCSV());
-
-            Console.WriteLine("Press enter to continue...");
-            Console.Read();
-#endif
-            RotationCalculator R = new RotationCalculator(3, 2);
-            Thread t = new Thread(new ThreadStart(R.ComputeOptions));
-            t.Start();
-            t.Join();
-
-            // Only return the first three [unique] scores
-            double currentScore = -1;
-            int countScores = 0;
-
-            while (R.Options.Count() > 0 && countScores < 4)
+            for ( int i = 0; i < cCPU; i++ )
             {
-                Rotation current = R.Options.Dequeue();
-                if (current.Score() != currentScore)
+                T[i].Start();
+            }
+
+            for (int i = 0; i < cCPU; i++)
+            {
+                T[i].Join();
+            }
+
+            // Just to make things simple, move all rotations to R[0]
+            for ( int i = 1; i < cCPU; i++ )
+            {
+                while ( R[i].Options.Count() > 0 )
                 {
-                    currentScore = current.Score();
-                    countScores++;
+                    Rotation current = R[i].Options.Dequeue();
+                    R[0].Options.Enqueue(current);
                 }
+            }
 
+            int total = R[0].Options.Count();
+            Console.WriteLine(Rotation.CSVHeader());
+            while ( R[0].Options.Count() > 0 )
+            {
+                Rotation current = R[0].Options.Dequeue();
                 Console.WriteLine(current.ToCSV());
             }
+
+            Console.WriteLine("{0} possiblities. Press enter to continue...", total);
         }
     }
 }

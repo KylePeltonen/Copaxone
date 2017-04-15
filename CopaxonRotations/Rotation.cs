@@ -43,6 +43,16 @@ namespace CopaxonRotations
             next--;
         }
 
+        public Cell MostRecent()
+        {
+            if ( next == 0 )
+            {
+                return new Cell();
+            }
+
+            return sequence[next - 1];
+        }
+
         public double Distance(int Gap)
         {
             double D1 = 0;
@@ -64,7 +74,7 @@ namespace CopaxonRotations
             return D1 + D2 * 0.5 + D3 * 0.25;
         }
 
-        public string CSVHeader()
+        public static string CSVHeader()
         {
             return "\"Sequence\",D1,D2,D3,Score";
         }

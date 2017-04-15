@@ -94,7 +94,7 @@ namespace CopaxonRotations
                 }
             }
 
-            throw new IndexOutOfRangeException();
+            return new Cell();
         }
 
         public Cell AcquireCell(uint Row, uint Column)
